@@ -24,8 +24,8 @@ class Ball:
         self.vy = speed
 
     # обновление координат
-    def update(self, FPS, width, height):
-        pos = FPS.tick(60) / 1000.0
+    def update(self, clock, width, height):
+        pos = clock.tick(60) / 1000.0
         self.x += self.vx * pos
         self.y += self.vy * pos
         if self.x > width - self.image.get_width():
@@ -46,20 +46,65 @@ class Ball:
         surface.blit(self.image, (self.x, self.y))
 
 
-if __name__ == '__main__':
+class Baffle:
+    def __init__(self, x, y, file_name, speed):
+        self.x = x
+        self.y = y
+        self.image = load_image(file_name)
+        self.vx = speed
+
+    def update(self, clock, width, goingLeft, goingRight):
+        if goingLeft:
+            self.x -= 10
+            goingLeft = False
+        elif goingRight:
+            self.x += 10
+            goingRight = False
+        if self.x < 0:
+            self.x = 0
+        if self.x + self.image.get_width() > width:
+            self.x = width - self.image.get_width()
+
+    def render(self, screen):
+        screen.blit(self.image, (self.x, self.y))
+
+
+def collide():
+    pass
+
+
+def main():
     pygame.init()
     size = width, height = 500, 720
     screen = pygame.display.set_mode(size)
 
     running = True
     ball = Ball(250, 360, 'Ball.png', 150)
-    FPSClock = pygame.time.Clock()
+    baffle = Baffle(250, 650, 'Baffle.png', 100)
+    fpsclock = pygame.time.Clock()
+    going_left, going_right = False, False
     while running:
         ball.render(screen)
+        baffle.render(screen)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-        ball.update(FPSClock, size[0], size[1])
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    going_left = True
+                elif event.key == pygame.K_RIGHT:
+                    going_right = True
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_LEFT:
+                    going_left = False
+                elif event.key == pygame.K_RIGHT:
+                    going_right = False
+        baffle.update(fpsclock, width, going_left, going_right)
+        ball.update(fpsclock, size[0], size[1])
         pygame.display.flip()
         screen.fill((0, 0, 0))
     pygame.quit()
+
+
+if __name__ == '__main__':
+    main()
